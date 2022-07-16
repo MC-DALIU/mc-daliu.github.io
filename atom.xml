@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://https://github.com/MC-DALIU/mc-daliu.github.io/</id>
+    <title>MC-DALIU</title>
+    <updated>2022-07-16T03:04:05.129Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://https://github.com/MC-DALIU/mc-daliu.github.io/"/>
+    <link rel="self" href="https://https://github.com/MC-DALIU/mc-daliu.github.io/atom.xml"/>
+    <subtitle>MC-DALIU的个人网站</subtitle>
+    <logo>https://https://github.com/MC-DALIU/mc-daliu.github.io/images/avatar.png</logo>
+    <icon>https://https://github.com/MC-DALIU/mc-daliu.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2022, MC-DALIU</rights>
+    <entry>
+        <title type="html"><![CDATA[Arch Linux 安装教程（以BIOS/MBR为例）]]></title>
+        <id>https://https://github.com/MC-DALIU/mc-daliu.github.io/post/arch-linux-an-zhuang-jiao-cheng-yi-biosmbr-wei-li/</id>
+        <link href="https://https://github.com/MC-DALIU/mc-daliu.github.io/post/arch-linux-an-zhuang-jiao-cheng-yi-biosmbr-wei-li/">
+        </link>
+        <updated>2022-07-16T02:28:25.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="arch-linux-安装教程以biosmbr为例">Arch Linux 安装教程（以BIOS/MBR为例）</h1>
+<h2 id="前言">前言</h2>
+<p><strong>——大家好，我是MC-DALIU。这是我第一次发 (误) 布 (人) 教 (子) 程 (弟) 。<br>
+😃</strong></p>
+<hr>
+<h3 id="1arch-linux的安装">1·Arch Linux的安装</h3>
+<h4 id="1前置工作">(1)前置工作</h4>
+<blockquote>
+<p><strong>$ ls /sys/firmware/efi/efivars</strong></p>
+</blockquote>
+<p>#验证引导模式（如果目录不存在，即为Legacy BIOS引导模式；反之，该教程则不适用于你的电脑。</p>
+<blockquote>
+<p><strong>$ iwctl</strong></p>
+</blockquote>
+<p>运行iwctl(如果是有线网络，可直接跳到&quot;ping archlinux.org&quot;这一步)</p>
+<blockquote>
+<p><strong>[iwctl]# device list</strong></p>
+</blockquote>
+<p>#列出WiFi设备（一般为wlan0；这里以wlan0为例）</p>
+<blockquote>
+<p><strong>[iwctl]# station wlan0 scan</strong></p>
+</blockquote>
+<p>扫描网络</p>
+<blockquote>
+<p><strong>[iwctl]# station wlan0 get-networks</strong></p>
+</blockquote>
+<p>列出可用网络</p>
+<blockquote>
+<p><strong>[iwctl]# station wlan0 connect XXX</strong></p>
+</blockquote>
+<p>连接到XXX（XXX改成你的WiFi名称）</p>
+<blockquote>
+<p><strong>[iwctl]# exit</strong></p>
+</blockquote>
+<p>退出iwctl</p>
+<blockquote>
+<p><strong>$ ping archlinux.org</strong></p>
+</blockquote>
+<p>检查网络连接（如果不停的有输出内容，即为联网成功；按Ctrl+C退出）</p>
+<blockquote>
+<p><strong>$ reflector --country China --save /etc/pacman.d/mirrorlist</strong></p>
+</blockquote>
+<p>换源（注意大小写）</p>
+<blockquote>
+<p><strong>$ systemctl stop reflector</strong></p>
+</blockquote>
+<p>关闭reflector服务</p>
+<blockquote>
+<p><strong>$ vim /etc/pacman.d/mirrorlist</strong></p>
+</blockquote>
+<p>编辑/etc/pacman.d/mirrorlist文件，保留需要的源（一般推荐使用中科大源（USTC）或清华（TUNA）源）</p>
+<p><strong>如果不会使用vim，记住这三个就行了:<br>
+按键盘上面的“i”或者“insert”键进入【编辑模式】<br>
+按‘ESC’退出编辑模式<br>
+输入：wq（冒号别漏了）保存并退出</strong></p>
+<blockquote>
+<p><strong>$ timedatectl set-ntp true</strong></p>
+</blockquote>
+<p>同步时间</p>
+<blockquote>
+<p><strong>$ timedatectl status</strong></p>
+</blockquote>
+<p>检查服务状态</p>
+<blockquote>
+<p><strong>$ pacman -Syy</strong></p>
+</blockquote>
+<p>同步数据</p>
+<hr>
+<h3 id="2分区挂载">(2)分区挂载</h3>
+<p><strong>警告：此过程必须慎重（尤其是对于双硬盘/多硬盘等存有大量或高价值数据者），严重者可能会丢失所有数据！</strong></p>
+<p><strong>此处使用SATA硬盘为例</strong></p>
+<p>第一种方法：使用fdisk</p>
+<blockquote>
+<p><strong>$ fdisk /dev/sda</strong></p>
+</blockquote>
+<p>#使用fdisk对sda进行相关操作<br>
+#步骤如下：</p>
+<blockquote>
+<p><strong>Command (m for help): o</strong></p>
+</blockquote>
+<p>#输入o新建MBR分区表</p>
+<blockquote>
+<p><strong>Command (m for help): n</strong></p>
+</blockquote>
+<p>#输入n创建新分区</p>
+<blockquote>
+<p><strong>Select (default p): p</strong></p>
+</blockquote>
+<p>#这里按Enter键创建主分区（如果想创建逻辑扩展分区请输入e）</p>
+<blockquote>
+<p><strong>Partition number (1-4, default 1):</strong></p>
+</blockquote>
+<p>#这里按Enter键</p>
+<blockquote>
+<p><strong>First sector (2048-X, default 2048):</strong></p>
+</blockquote>
+<p>#这里按Enter键</p>
+<blockquote>
+<p><strong>Last sector, +/-sectors or +/-size{K,M,G,T,P} (2048-X, default X): +10G</strong></p>
+</blockquote>
+<p>#输入+10G</p>
+<blockquote>
+<p><strong>Command (m for help): t</strong></p>
+</blockquote>
+<p>#输入t更改分区类型</p>
+<blockquote>
+<p><strong>Hex code or alias (type L to list all): 82</strong></p>
+</blockquote>
+<p>#输入82，创建swap分区</p>
+<blockquote>
+<p><strong>Command (m for help): n</strong></p>
+</blockquote>
+<p>#输入n创建新分区，然后一直按Enter键，把剩下的空间全部分配给/分区</p>
+<blockquote>
+<p><strong>Command (m for help): w</strong></p>
+</blockquote>
+<p>#输入w写入</p>
+<hr>
+<p>第二种方法：使用CFdisk（方便快捷，推荐新手使用）</p>
+<p><strong>$ cfdisk /dev/sda</strong><br>
+#进入cfdisk程序，并且对第一块硬盘进行编辑操作（得看你这里是第几块硬盘安装系统，如果是第二块就sdb,第三块就sdc......以此类推。）</p>
+<p>进去以后你会看到你的分区信息。</p>
+<blockquote>
+<p><strong>操作方法（按键盘上下键选择分区，左右键选择功能</strong>）：</p>
+<p>如果你想删除分区，请将光标移到delete并按下回车。</p>
+<p>如果你想创建分区则移到列表下的free space按“new”。</p>
+<p>如果是调节你想要的分区的大小，请按“resize”。</p>
+<p>更改分区类型按“type”。</p>
+</blockquote>
+<p><strong>请准备两个空闲分区来安装Arch Linux。</strong></p>
+<p><strong>准备一个任意大小（建议20GB以上）的分区</strong>（假设为<strong>sda1</strong>，请根据实际情况判断），和一个 <strong>等于你的 RAM（运行内存） 容量的3/4或全部 的分区</strong>（假设为<strong>sda2</strong>，请根据实际情况判断）。</p>
+<blockquote>
+<p>将sda1的分区类型改为【83 Linux】<br>
+sda2的分区类型改为【82 Linux Swap/Solaris】</p>
+</blockquote>
+<p>更改完毕后按左右键选择【write】按回车，输入“yes”，再按一下。</p>
+<h4 id="至此arch的分区工作就完成了">至此，arch的分区工作就完成了。</h4>
+<hr>
+<h3 id="3安装arch-linux">(3)安装Arch linux</h3>
+<blockquote>
+<p>$ pacstrap /mnt linux linux-firmware linux-headers base base-devel vim bash-completion iwd dhcpcd networkmanager</p>
+</blockquote>
+<p>#安装linux &amp; linux-firmware &amp; linux-headers &amp; base &amp; base-devel &amp; vim &amp; bash- completion &amp; iwd &amp; dhcpcd &amp; networkmanager</p>
+<blockquote>
+<p>$ genfstab -U /mnt &gt;&gt; /mnt/etc/fstab</p>
+</blockquote>
+<p>#生成/mnt/etc/fstab文件（注意大小写）</p>
+<blockquote>
+<p>$ cat /mnt/etc/fstab</p>
+</blockquote>
+<p>#查看/mnt/etc/fstab文件是否正确（如果不正确，请重新分区、挂载、pacstrap）</p>
+<blockquote>
+<p>$ arch-chroot /mnt</p>
+</blockquote>
+<p>#进入目标系统</p>
+<blockquote>
+<p>$ pacman -Syy</p>
+</blockquote>
+<p>#同步数据</p>
+<blockquote>
+<p>$ pacman -S grub amd-ucode intel-ucode</p>
+</blockquote>
+<p>#安装grub &amp; amd-ucode或intel-ucode（AMD的CPU安装amd-ucode，intel的CPU安装intel- ucode）</p>
+<blockquote>
+<p>$ lsblk</p>
+</blockquote>
+<p>#查看硬盘名称</p>
+<blockquote>
+<p>$ grub-install /dev/sda</p>
+</blockquote>
+<p>#将grub写入sda</p>
+<blockquote>
+<p>$ grub-mkconfig -o /boot/grub/grub.cfg</p>
+</blockquote>
+<p>#生成/boot/grub/grub.cfg文件</p>
+<blockquote>
+<p>$ systemctl enable iwd dhcpcd</p>
+</blockquote>
+<p>#开机自启iwd服务和dhcpcd服务</p>
+<blockquote>
+<p>$ passwd root</p>
+</blockquote>
+<p>#设置root密码</p>
+<hr>
+<h3 id="4重启并进入下一步工作">（4）重启并进入下一步工作</h3>
+<blockquote>
+<p>$ exit</p>
+</blockquote>
+<p>#退出目标系统</p>
+<blockquote>
+<p>$ umount /mnt</p>
+</blockquote>
+<p>#卸载/mnt目录（这里的意思是取消挂载，不是卸载软件的卸载！）</p>
+<blockquote>
+<p>$ reboot</p>
+</blockquote>
+<p>#重启并登陆root（彻底关机那一刻请立即拔出安装U盘，如果觉得手慢就输入poweroff）</p>
+<hr>
+<h2 id="至此archlinux的基本安装就已经结束了-但是还没完因为还要配置-本地化和安装桌面环境等操作">至此，Archlinux的基本安装就已经结束了。但是还没完，因为还要配置、本地化和安装桌面环境等操作。</h2>
+<h3 id="2arch-linux的配置">2·Arch Linux的配置</h3>
+<blockquote>
+<p>$ iwctl</p>
+</blockquote>
+<p>#运行iwctl（使用方法请参考第一阶段的联网部分；台式机可跳过）</p>
+<blockquote>
+<p>$ ping archlinux.org</p>
+</blockquote>
+<p>#检查网络连接（如果不停的有输出内容，即为联网成功；按Ctrl+C终止输出）</p>
+<blockquote>
+<p>$ vim /etc/hostname</p>
+</blockquote>
+<p>#创建/etc/hostname文件，加入以下内容:<br>
+arch<br>
+#将主机名设置为arch</p>
+<blockquote>
+<p>$ vim /etc/hosts</p>
+</blockquote>
+<p>#编辑/etc/hosts文件，在末尾加入以下内容：<br>
+127.0.0.1 localhost<br>
+::1 localhost<br>
+127.0.1.1 arch.localdomain arch<br>
+#配置hosts文件，映射IP地址和主机名</p>
+<blockquote>
+<p>$ timedatectl set-timezone Asia/Shanghai &amp;&amp; ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &amp;&amp; hwclock --systohc</p>
+</blockquote>
+<p>#设置时区为上海（注意大小写）</p>
+<blockquote>
+<p>$ timedatectl set-ntp true</p>
+</blockquote>
+<p>#同步时间</p>
+<blockquote>
+<p>$ timedatectl status</p>
+</blockquote>
+<p>#检查服务状态</p>
+<blockquote>
+<p>$ vim /etc/skel/.bashrc</p>
+</blockquote>
+<p>#编辑/etc/skel/.bashrc文件，在开头加入以下内容：<br>
+export EDITOR='vim'<br>
+#设置vim为默认文本编辑器（注意大小写）</p>
+<blockquote>
+<p>$ cp -a /etc/skel/. ~</p>
+</blockquote>
+<p>#复制/etc/skel目录下的文件到主目录</p>
+<blockquote>
+<p>$ reboot</p>
+</blockquote>
+<p>#重启并登陆root</p>
+<blockquote>
+<p>$ useradd --create-home arch</p>
+</blockquote>
+<p>#添加普通用户，用户名为arch</p>
+<blockquote>
+<p>$ passwd arch</p>
+</blockquote>
+<p>#设置arch密码</p>
+<blockquote>
+<p>$ usermod -aG adm,wheel,storage arch</p>
+</blockquote>
+<p>#将arch添加到相应的组中</p>
+<blockquote>
+<p>$ id arch</p>
+</blockquote>
+<p>#查看用户组是否添加到相应的组中</p>
+<blockquote>
+<p>$ visudo</p>
+</blockquote>
+<p>#设置用户权限，删除%wheel ALL=(ALL:ALL) ALL前面的#</p>
+<blockquote>
+<p>$ reboot</p>
+</blockquote>
+<p>#重启并登陆root</p>
+<blockquote>
+<p>$ vim /etc/locale.gen</p>
+</blockquote>
+<p>#编辑/etc/locale.gen文件,删除en_US.UTF-8 UTF-8和zh_CN.UTF-8 UTF-8前面的#</p>
+<blockquote>
+<p>$ locale-gen</p>
+</blockquote>
+<p>#生成语言</p>
+<blockquote>
+<p>$ vim /etc/locale.conf</p>
+</blockquote>
+<p>#创建/etc/locale.conf文件，加入以下内容：<br>
+LANG=en_US.UTF-8<br>
+#设置语言为en_US.UTF-8（注意大小写）</p>
+<blockquote>
+<p>$ reboot</p>
+</blockquote>
+<p>#重启并登陆root $ vim /etc/pacman.conf</p>
+<p>#编辑/etc/pacman.conf文件，删除[multilib]区域的所有#（开启32位支持）并在末尾加入以下内容：<br>
+<strong>[archlinuxcn]<br>
+Server = https://mirrors.ustc.edu.cn/archlinuxcn/$arch</strong><br>
+#添加archlinuxcn源（一般推荐使用中科大源；除了可以添加archlinuxcn源外，还可以添加arch4edu源、blackarch源以及各种私有源，后面会提到；注意大小写）</p>
+<blockquote>
+<p>$ pacman -Syy</p>
+</blockquote>
+<p>#同步数据</p>
+<blockquote>
+<p>$ pacman -S archlinuxcn-keyring</p>
+</blockquote>
+<p>#安装archlinuxcn-keyring</p>
+<blockquote>
+<p>$ rm -rf /etc/pacman.d/gnupg &amp;&amp; pacman-key --init &amp;&amp; pacman-key --populate archlinux &amp;&amp; pacman-key --populate archlinuxcn</p>
+</blockquote>
+<p>#生成新的密钥环并重新签署密钥（安装archlinuxcn-keyring不报错时可跳过）</p>
+<blockquote>
+<p>$ pacman -Syy</p>
+</blockquote>
+<p>#再次同步数据</p>
+<blockquote>
+<p>$ pacman -S mesa lib32-mesa xf86-video-amdgpu vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau xf86-video- ati</p>
+</blockquote>
+<p>#安装AMD核显相关驱动  （<strong>英特尔用户请跳过</strong>）</p>
+<blockquote>
+<p>$ pacman -S mesa lib32-mesa xf86-video-intel vulkan-intel lib32-vulkan-intel</p>
+</blockquote>
+<p>#安装intel核显相关驱动   （<strong>AMD用户请跳过</strong>）</p>
+<blockquote>
+<p>$ pacman -S alsa-utils alsa-plugins alsa-oss alsa-firmware sof-firmware alsa-ucm- conf pulseaudio pulseaudio-alsa pulseaudio-bluetooth</p>
+</blockquote>
+<p>#安装声音相关驱动</p>
+<blockquote>
+<p>$ systemctl enable bluetooth</p>
+</blockquote>
+<p>#开机自启bluetooth服务</p>
+<blockquote>
+<p>$ reboot</p>
+</blockquote>
+<p>#重启并登陆root</p>
+<hr>
+<h3 id="安装kde桌面环境">安装KDE桌面环境</h3>
+<blockquote>
+<p>$ pacman -Syy</p>
+</blockquote>
+<p>#同步数据</p>
+<blockquote>
+<p>$ pacman -S ttf-dejavu ttf-liberation noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-emoji-blob noto-fonts-extra adobe-source-han-sans-otc-fonts adobe- source-han-serif-otc-fonts wqy-bitmapfont wqy-microhei wqy-microhei-lite wqy- zenhei ttf-arphic-extra ttf-arphic-ukai ttf-arphic-uming</p>
+</blockquote>
+<p>#安装字体（请根据需要自行补充，这里只安装常用的包）</p>
+<blockquote>
+<p>$ pacman -S plasma plasma-meta konsole dolphin kate ark gwenview vlc firefox firefox-i18n-zh-cn packagekit-qt5</p>
+</blockquote>
+<p>#安装KDE桌面及软件（这里只安装最必要的包，如果想完整使用KDE的各种功能请根据对应提示安装需要的包）</p>
+<blockquote>
+<p>$ systemctl enable sddm</p>
+</blockquote>
+<p>#开机自启sddm服务</p>
+<blockquote>
+<p>$ systemctl disable iwd</p>
+</blockquote>
+<p>#取消自启iwd服务</p>
+<blockquote>
+<p>$ systemctl enable NetworkManager</p>
+</blockquote>
+<p>#开机自启NetworkManager服务（注意大小写）</p>
+<blockquote>
+<p>$ reboot</p>
+</blockquote>
+<p>#重启</p>
+<hr>
+<h3 id="kde的中文化">KDE的中文化</h3>
+<blockquote>
+<p>System Settings（系统设置）&gt;&gt;Regional Settings（区域设置）&gt;&gt;Language（语言）&gt;&gt;Add<br>
+language（添加语言），找到简体中文后点Add（添加）。<strong>添加简体中文后，将其移到最上面，并删除 其他多余语言，否则会出现汉化不全的情况。上述操作完成后，点击Apply（应用）。</strong><br>
+System Settings（系统设置）&gt;&gt;Regional Settings（区域设置）&gt;&gt;Formats（格式）&gt;&gt;Region（区 域），选择简体中文（中国）。上述操作完成后，点击Apply（应用）。</p>
+</blockquote>
+<hr>
+<blockquote>
+<p>$ reboot</p>
+</blockquote>
+<p>重启</p>
+<hr>
+<h3 id="aur-helper的安装">AUR helper的安装</h3>
+<blockquote>
+<p>$ sudo pacman -S yay</p>
+</blockquote>
+<p>#安装yay（它在某些时候可以替代pacman来安装软件）</p>
+<hr>
+<h3 id="添加其他软件源">添加其他软件源</h3>
+<blockquote>
+<p>$ sudo pacman-key --recv-keys 7931B6D628C8D3BA &amp;&amp; sudo pacman-key --finger 7931B6D628C8D3BA &amp;&amp; sudo pacman-key --lsign-key 7931B6D628C8D3BA</p>
+</blockquote>
+<p>#导入arch4edu源的GPG key</p>
+<blockquote>
+<p>$ sudo vim /etc/pacman.conf</p>
+</blockquote>
+<p>#编辑/etc/pacman.conf文件，在末尾加入以下内容：<br>
+<strong>[arch4edu] Server = https://mirrors.tuna.tsinghua.edu.cn/arch4edu/$arch</strong><br>
+#添加arch4edu源</p>
+<blockquote>
+<p>$ sudo pacman -Syy</p>
+</blockquote>
+<p>#同步数据</p>
+<blockquote>
+<p>$ sudo pacman -S arch4edu-keyring</p>
+</blockquote>
+<p>#安装arch4edu-keyring</p>
+<blockquote>
+<p>$ sudo rm -rf /etc/pacman.d/gnupg &amp;&amp; sudo pacman-key --init &amp;&amp; sudo pacman-key --populate archlinux &amp;&amp; sudo pacman-key --populate archlinuxcn &amp;&amp; sudo pacman-key --populate arch4edu</p>
+</blockquote>
+<p>#生成新的密钥环并重新签署密钥</p>
+<blockquote>
+<p>$ sudo pacman -Syy</p>
+</blockquote>
+<p>#再次同步数据</p>
+<hr>
+<h3 id="更新系统">更新系统</h3>
+<blockquote>
+<p>$ sudo pacman -Syu</p>
+</blockquote>
+<p>#更新系统</p>
+<blockquote>
+<p>$ yay</p>
+</blockquote>
+<p>#更新系统及AUR软件</p>
+<p><strong>警告：在更新时请先查看ArchLinux官网的新闻公告，看是否需要升级时人为干预，请勿无脑更新。</strong></p>
+<hr>
+<h1 id="end">END</h1>
+<p><s>想再看一遍本教程吗`？输入sudo rm -rf /*，你会回来的。</s></p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Hello Gridea]]></title>
+        <id>https://https://github.com/MC-DALIU/mc-daliu.github.io/post/hello-gridea/</id>
+        <link href="https://https://github.com/MC-DALIU/mc-daliu.github.io/post/hello-gridea/">
+        </link>
+        <updated>2018-12-11T16:00:00.000Z</updated>
+        <summary type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
+✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
+✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
+<!-- more -->
+<p><a href="https://github.com/getgridea/gridea">Github</a><br>
+<a href="https://gridea.dev/">Gridea 主页</a><br>
+<a href="https://fehey.com/">示例网站</a></p>
+<h2 id="特性">特性👇</h2>
+<p>📝  你可以使用最酷的 <strong>Markdown</strong> 语法，进行快速创作</p>
+<p>🌉  你可以给文章配上精美的封面图和在文章任意位置插入图片</p>
+<p>🏷️  你可以对文章进行标签分组</p>
+<p>📋  你可以自定义菜单，甚至可以创建外部链接菜单</p>
+<p>💻  你可以在 <strong>Windows</strong>，<strong>MacOS</strong> 或 <strong>Linux</strong> 设备上使用此客户端</p>
+<p>🌎  你可以使用 <strong>𝖦𝗂𝗍𝗁𝗎𝖻 𝖯𝖺𝗀𝖾𝗌</strong> 或 <strong>Coding Pages</strong> 向世界展示，未来将支持更多平台</p>
+<p>💬  你可以进行简单的配置，接入 <a href="https://github.com/gitalk/gitalk">Gitalk</a> 或 <a href="https://github.com/SukkaW/DisqusJS">DisqusJS</a> 评论系统</p>
+<p>🇬🇧  你可以使用<strong>中文简体</strong>或<strong>英语</strong></p>
+<p>🌁  你可以任意使用应用内默认主题或任意第三方主题，强大的主题自定义能力</p>
+<p>🖥  你可以自定义源文件夹，利用 OneDrive、百度网盘、iCloud、Dropbox 等进行多设备同步</p>
+<p>🌱 当然 <strong>Gridea</strong> 还很年轻，有很多不足，但请相信，它会不停向前 🏃</p>
+<p>未来，它一定会成为你离不开的伙伴</p>
+<p>尽情发挥你的才华吧！</p>
+<p>😘 Enjoy~</p>
+]]></content>
+    </entry>
+</feed>
